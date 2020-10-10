@@ -5,5 +5,5 @@
 *.tif
 *.txt
 *pycache*
-.ipynb_checkepoints*
+*ipynb*
 demo.py
