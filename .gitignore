@@ -6,4 +6,6 @@
 *.txt
 *pycache*
 *ipynb*
+train_logs
+log_processing.py
 demo.py
