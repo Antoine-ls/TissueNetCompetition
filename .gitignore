@@ -4,3 +4,6 @@
 *.pth
 *.tif
 *.txt
+*pycache*
+.ipynb_checkepoints*
+demo.py
