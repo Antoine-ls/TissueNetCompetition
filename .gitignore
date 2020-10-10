@@ -1,0 +1,6 @@
+*.pyc
+*events*
+*.vscode*
+*.pth
+*.tif
+*.txt
