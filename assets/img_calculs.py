@@ -47,7 +47,7 @@ def seg_kmeans(a_img_in: np.array, disp=False, denoise_f=None):
     if denoise_f is not None:
         if isinstance(denoise_f, collections.Iterable):
             for f in denoise_f:
-                img_out = f(img_out)
+                img_out = f(img_out, disp=disp)
         else:
             img_out = denoise_f(img_out)
 
@@ -71,6 +71,13 @@ def seg_canny(a_img_in: np.array, disp=False, denoise_f=None):
 
     # canny
     img_out = cv2.Canny(a_img_in, 125, 256)
+
+    if denoise_f is not None:
+        if isinstance(denoise_f, collections.Iterable):
+            for f in denoise_f:
+                img_out = f(img_out, disp=disp)
+        else:
+            img_out = denoise_f(img_out)
 
     if disp:
         plt.subplot(121), plt.imshow(a_img_in), plt.title('input')
@@ -99,7 +106,7 @@ def seg_gray_threshold(a_img_in: np.array, disp=False, denoise_f=None):
     if denoise_f is not None:
         if isinstance(denoise_f, collections.Iterable):
             for f in denoise_f:
-                img_out = f(img_out)
+                img_out = f(img_out, disp=disp)
         else:
             img_out = denoise_f(img_out)
 
@@ -135,7 +142,7 @@ def seg_hsv_threshold(a_img_in: np.array, disp=False, denoise_f=None):
     if denoise_f is not None:
         if isinstance(denoise_f, collections.Iterable):
             for f in denoise_f:
-                img_out = f(img_out)
+                img_out = f(img_out, disp=disp)
         else:
             img_out = denoise_f(img_out)
 
@@ -212,7 +219,7 @@ def denoise_erode(a_img_in: np.array, disp=False):
 
     if disp:
         plt.subplot(121), plt.imshow(a_img_in, 'gray'), plt.title('input')
-        plt.subplot(122), plt.imshow(img_out, 'gray'), plt.title('denoised_bilatera')
+        plt.subplot(122), plt.imshow(img_out, 'gray'), plt.title('denoised_erode')
         plt.show()
 
     return img_out
@@ -230,10 +237,10 @@ def apply_mask(a_img_in: np.array, a_mask_in: np.array, disp=False):
     if len(a_img_in.shape) == 3:
         mask_3d = np.empty_like(a_img_in)
         for i in range(3):
-            mask_3d[:, :, i] = a_img_in
-        img_out = np.dot(a_img_in, mask_3d)
+            mask_3d[:, :, i] = a_mask_in
+        img_out = a_img_in * mask_3d
     else:
-        img_out = np.dot(a_img_in, a_mask_in)
+        img_out = a_img_in * a_mask_in
 
     if disp:
         plt.subplot(121), plt.imshow(a_img_in), plt.title('input')
@@ -298,3 +305,33 @@ def get_polygons_contours(a_img_in: np.array, a_mask_in: np.array, disp=False):
 def reduce_boxes(boxes, size):
     boxes_reduced = [box for box in boxes if box[3] > size or box[4] > size]
     return boxes_reduced
+
+
+def cal_blur_index_laplacian(a_img_in: np.array):
+    """
+    This function calculates the blur index of a image
+
+    :param a_img_in: np array
+    :return: a blur index
+    """
+
+    img_in_gray = cv2.cvtColor(a_img_in, cv2.COLOR_BGR2GRAY)
+    index = cv2.Laplacian(img_in_gray, cv2.CV_64F).var()
+    return index
+
+
+def cal_blur_index_fft(a_img_in: np.array, size=60, thresh=10, disp=False):
+    h, w = a_img_in.shape[0] / 2, a_img_in.shape[1] / 2
+    cX, cY = int(w / 2.0), int(h / 2.0)
+    a_img_in = cv2.resize(a_img_in, (w / 2, h / 2))
+    img_gray = cv2.cvtColor(a_img_in, cv2.COLOR_BGR2GRAY)
+    img_fft = np.fft.fft2(img_gray)
+    fftShift = np.fft.fftshift(img_fft)
+    fftShift[cY - size:cY+size, cX - size:cX + size] = 0
+    fftShift = np.fft.ifftshift(fftShift)
+    recon = np.fft.ifft2(fftShift)
+
+    magnitude = 20 * np.log(np.abs(recon))
+    mean = np.mean(magnitude)
+
+    return mean, mean <= thresh
