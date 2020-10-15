@@ -7,11 +7,6 @@ from torchvision import transforms as T
 import numpy as np
 import pandas as pd
 
-transform = T.Compose([
-    T.ToTensor()
-]   
-)
-
 class TissueDataAnno(Dataset): #继承Dataset
     """
         polygon based dataset for training
