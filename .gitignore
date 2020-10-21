@@ -9,3 +9,5 @@
 train_logs
 log_processing.py
 demo.py
+/train_data/proba_results.obj
+data/work_metadata.csv

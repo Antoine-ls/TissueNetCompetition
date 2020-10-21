@@ -41,16 +41,17 @@ df = pd.DataFrame(columns=['filename','0','1','2','3'])
 def test():
     resnet50.eval()
     pre = []
-    with tqdm(total = data_size, desc = f'evaluating',unit = 'img') as pbar:
-        for i_batch,batch_data in enumerate(val_loader):
-            img = batch_data['img'].to(device = device)
-            pred = resnet50(img)
-            pred = pred.squeeze().detach().cpu()
-            if len(list(pred.size())) == 1:
-                pre.append(int(argmax(pred,0)))
-            else:
-                pre += argmax(pred,1).tolist()
-            pbar.update(img.shape[0])
+    with torch.no_grad(): # 会快一些
+        with tqdm(total = data_size, desc = f'evaluating',unit = 'img') as pbar:
+            for i_batch,batch_data in enumerate(val_loader):
+                img = batch_data['img'].to(device = device)
+                pred = resnet50(img)
+                pred = pred.squeeze().detach().cpu()
+                if len(list(pred.size())) == 1:
+                    pre.append(int(argmax(pred,0)))
+                else:
+                    pre += argmax(pred,1).tolist()
+                pbar.update(img.shape[0])
     return np.array(pre)
 
 with tqdm(total = len(tifs), desc = f'evaluating',unit = 'img') as pbar2:
@@ -124,11 +125,12 @@ net.to(device = device)
 def test():
         net.eval()
         pre = []
-        probs = t.Tensor(proba_results).to(device = device)
-        print(probs.shape)
-        pred = net(probs)
-        pred = pred.squeeze().detach().cpu()
-        pre += argmax(pred,1).tolist()
+        with torch.no_grad():
+            probs = t.Tensor(proba_results).to(device = device)
+            print(probs.shape)
+            pred = net(probs)
+            pred = pred.squeeze().detach().cpu()
+            pre += argmax(pred,1).tolist()
         return pre
 pre = test()
 
