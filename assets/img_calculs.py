@@ -250,7 +250,12 @@ def apply_mask(a_img_in: np.array, a_mask_in: np.array, disp=False):
     return img_out
 
 
-def get_boxes_contours(a_img_in: np.array, a_mask_in: np.array, disp=False, draw_contours=False):
+def reduce_boxes(boxes, thresh):
+    boxes_reduced = [box for box in boxes if box[2] > thresh and box[3] > thresh]
+    return boxes_reduced
+
+
+def get_boxes_contours(a_img_in: np.array, a_mask_in: np.array, disp=False, draw_contours=False, thresh=None):
     """
     This function generates the bounding boxes
     :param a_img_in: input rgb image (np.array)
@@ -264,6 +269,11 @@ def get_boxes_contours(a_img_in: np.array, a_mask_in: np.array, disp=False, draw
     for i, contour in enumerate(contours):
         boxes.append(cv2.boundingRect(contour))
 
+    if thresh is not None: # 建议选择200
+        old_len = len(boxes)
+        boxes = reduce_boxes(boxes, thresh)
+        print("Filted {} boxes".format(len(boxes) - old_len))
+
     if disp:
         img_out = a_img_in.copy().astype(np.uint8)
         if draw_contours:
@@ -275,6 +285,7 @@ def get_boxes_contours(a_img_in: np.array, a_mask_in: np.array, disp=False, draw
         plt.subplot(121), plt.imshow(a_img_in), plt.title('input')
         plt.subplot(122), plt.imshow(img_out), plt.title('bounding_box')
         plt.show()
+    
 
     return boxes, contours, hierarchy
 
@@ -300,11 +311,6 @@ def get_polygons_contours(a_img_in: np.array, a_mask_in: np.array, disp=False):
         plt.show()
 
     return polygens, contours, hierarchy
-
-
-def reduce_boxes(boxes, size):
-    boxes_reduced = [box for box in boxes if box[3] > size or box[4] > size]
-    return boxes_reduced
 
 
 def cal_blur_index_laplacian(a_img_in: np.array):
