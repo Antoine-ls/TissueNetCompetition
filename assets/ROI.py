@@ -82,13 +82,23 @@ if __name__ == '__main__':
     from img_calculs import seg_kmeans, seg_canny, get_boxes_contours
     from img_calculs import denoise_bilatera, denoise_erode
     from img2np import np_from_tif, np_from_jpg
+    import os
 
-    img = np_from_jpg('../data/downsampled_images/C06_B001_S21.jpg')
-    # img = np_from_tif('../data/tif_images/C01_B103_S01.tif', 7)
+    TIF_DIR = '/home/yutong/TissueNet/data/tif_images/'
+    JPG_DIR = '/home/yutong/TissueNet/data/downsampled_images/'
+
+    FILE_NAME = 'C01_B108_S01'
+
+    TIF_PATH = os.path.join(TIF_DIR, FILE_NAME + '.tif')
+    JPG_PATH = os.path.join(JPG_DIR, FILE_NAME + '.jpg')
+
+    img = np_from_jpg(JPG_PATH)
+    print(JPG_PATH)
+    # img = np_from_tif('../data/tif_images/C01_B108_S01.tif', 7)
     mask = seg_kmeans(img, disp=False, denoise_f=(denoise_erode, denoise_bilatera))
-    boxes, contours, _ = get_boxes_contours(img, mask, disp=True)
+    boxes, contours, _ = get_boxes_contours(img, mask, disp=True, thresh=1e-3)
     R = ROI()
-    R.set_boxes(name='C13_B156_S11.tif', W=img.shape[1], H=img.shape[0], boxes=boxes, coordinate='lu')
-    R.plot('C13_B156_S11.tif')
-    B = R.get_boxes_normalized('C13_B156_S11.tif', 'lu')
+    R.set_boxes(name='C01_B108_S01.tif', W=img.shape[1], H=img.shape[0], boxes=boxes, coordinate='lu')
+    R.plot('C01_B108_S01.tif')
+    B = R.get_boxes_normalized('C01_B108_S01.tif', 'lu')
     print('Finished')
